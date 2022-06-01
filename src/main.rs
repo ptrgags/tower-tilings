@@ -22,5 +22,5 @@ fn main() {
     ];
 
     mesh.extrude_profile(top_face, profile);
-    mesh.save("tower.glb");
+    mesh.save("tower.obj");
 }

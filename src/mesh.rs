@@ -1,3 +1,7 @@
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::LineWriter;
+
 pub struct Vertex {
     pub position: (f64, f64, f64),
     pub half_edge: Option<usize>,
@@ -61,16 +65,13 @@ impl Mesh {
         }
     }
 
-    pub fn add_vertex(&mut self, position: (f64, f64, f64)) -> VertexHandle {
+    pub fn add_vertex(&mut self, position: (f64, f64, f64)) -> usize {
         let index = self.vertices.len();
         self.vertices.push(Vertex::new(position));
-
-        VertexHandle {
-            index
-        }
+        index
     }
 
-    pub fn add_face(&mut self, vertices: Vec<VertexHandle>) -> FaceHandle {
+    pub fn add_face(&mut self, vertices: Vec<usize>) -> usize {
         assert!(vertices.len() >= 3, "Must have at least 3 vertices");
 
         let index = self.faces.len();
@@ -85,7 +86,7 @@ impl Mesh {
             new_edges.push(half_edge_index);
             
             // Create the half edge rooted at the current vertex
-            let vert_index = vertices[i].index;
+            let vert_index = vertices[i];
             let half_edge = HalfEdge::new(vert_index);
             self.half_edges.push(half_edge);
             
@@ -116,23 +117,96 @@ impl Mesh {
             self.half_edges[index].face = Some(face_index)
         }
 
-        FaceHandle {
-            index
-        }
+        index
     }
 
-    pub fn extrude(&mut self, face: FaceHandle, _extrude_dist: f64) -> FaceHandle {
+    pub fn all_vertices(&self) -> std::slice::Iter<Vertex> {
+        self.vertices.iter()
+    }
+
+    pub fn all_faces(&self) -> std::slice::Iter<Face> {
+        self.faces.iter()
+    }
+
+    pub fn face_edge_iter(&self, face: usize) -> FaceEdgeIter {
+        FaceEdgeIter::new(self, face)
+    }
+
+    pub fn extrude(&mut self, face: usize, _extrude_dist: f64) -> usize {
         println!("implement extrude()!");
         face
     }
 
-    pub fn extrude_profile(&mut self, face: FaceHandle, _profile: Vec<(i32, i32)>) -> FaceHandle {
+    pub fn extrude_profile(&mut self, face: usize, _profile: Vec<(i32, i32)>) -> usize {
         println!("implement extrude_profile()!");
         face
     }
 
-    pub fn save(&self, _fname: &str) {
-        println!("implement save()!");
+    pub fn save(&self, fname: &str) {
+        let file = File::create(fname).expect("could not open file");
+        let mut file = LineWriter::new(file);
+
+        for vertex in self.all_vertices() {
+            let (x, y, z) = vertex.position;
+            let vertex_line = format!("v {} {} {}\n", x, y, z);
+            file.write_all(vertex_line.as_bytes())
+                .expect("could not write vertex line");
+        }
+
+        for (i, _) in self.all_faces().enumerate() {
+            let indices = self.face_edge_iter(i)
+                // OBJ is 1-indexed, hence the + 1
+                .map(|edge| edge.from_vertex);
+            let obj_indices = indices
+                .map(|x| format!("{}", x + 1))
+                .collect::<Vec<String>>()
+                .join(" ");
+            let face_line = format!("f {}\n", obj_indices);
+            file.write_all(face_line.as_bytes())
+                .expect("Could not write face line");
+        }
+    }
+}
+
+/// Iterator that produces the edges around a face
+pub struct FaceEdgeIter<'a> {
+    mesh: &'a Mesh,
+    first_edge: usize,
+    current_edge: Option<usize>,
+}
+
+impl<'a> FaceEdgeIter<'a> {
+    pub fn new(mesh: &'a Mesh, face: usize) -> Self {
+        let first_edge = mesh.faces[face].half_edge;
+        Self {
+            mesh,
+            first_edge,
+            current_edge: Some(first_edge)
+        }
+    }
+}
+
+impl<'a> Iterator for FaceEdgeIter<'a> {
+    type Item = &'a HalfEdge;
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(index) = self.current_edge {
+            let current = &self.mesh.half_edges[index];
+
+            // Use the next pointer, but if we returned to the start,
+            // mark the end of iteration.
+            self.current_edge = match current.next {
+                Some(edge) => if edge == self.first_edge { 
+                    None 
+                } else {
+                    Some(edge)
+                },
+                None => None
+            };
+
+            Some(current)
+        } else {
+            None
+        }
     }
 }
 
@@ -191,14 +265,4 @@ mod tests {
         assert_eq!(mesh.faces[0].half_edge, 0);
         assert!(mesh.faces[0].normal.is_none());
     }
-}
-
-#[derive(Clone, Copy)]
-pub struct VertexHandle {
-    pub index: usize
-}
-
-#[derive(Clone, Copy)]
-pub struct FaceHandle {
-    pub index: usize
 }
