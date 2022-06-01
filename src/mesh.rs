@@ -173,7 +173,7 @@ impl Mesh {
         // TODO: remove the old face
 
         let old_vertices: Vec<usize> = self.face_edge_iter(face_index)
-            .map(|edge| edge.from_vertex)
+            .map(|i| self.half_edges[i].from_vertex)
             .collect();
         let new_vertices: Vec<usize> = old_vertices.iter()
             .map(|i| {
@@ -224,9 +224,9 @@ impl Mesh {
 
         for (i, _) in self.all_faces().enumerate() {
             let indices = self.face_edge_iter(i)
-                // OBJ is 1-indexed, hence the + 1
-                .map(|edge| edge.from_vertex);
+                .map(|i| self.half_edges[i].from_vertex);
             let obj_indices = indices
+                // OBJ is 1-indexed
                 .map(|x| format!("{}", x + 1))
                 .collect::<Vec<String>>()
                 .join(" ");
@@ -267,7 +267,7 @@ impl<'a> FaceEdgeIter<'a> {
 }
 
 impl<'a> Iterator for FaceEdgeIter<'a> {
-    type Item = &'a HalfEdge;
+    type Item = usize;
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(index) = self.current_edge {
             let current = &self.mesh.half_edges[index];
@@ -275,7 +275,7 @@ impl<'a> Iterator for FaceEdgeIter<'a> {
             // Use the next pointer, but if we returned to the start,
             // mark the end of iteration.
             self.advance(current.next);
-            Some(current)
+            Some(index)
         } else {
             None
         }
