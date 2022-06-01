@@ -120,6 +120,40 @@ impl Mesh {
         index
     }
 
+    pub fn compute_face_normals(&mut self) {
+        for face in self.faces.iter_mut() {
+            // Normal was already computed
+            if let Some(_) = face.normal {
+                continue;
+            }
+
+            // This assumes the face is a coplanar n-gon
+            // so the normal of the triangle spanned by the first
+            // 3 edges will give the normal
+            let edge1 = &self.half_edges[face.half_edge];
+            let edge2 = &self.half_edges[edge1.next.unwrap()];
+            let edge3 = &self.half_edges[edge2.next.unwrap()];
+
+            let (ax, ay, az) = &self.vertices[edge1.from_vertex].position;
+            let (bx, by, bz) = &self.vertices[edge2.from_vertex].position;
+            let (cx, cy, cz) = &self.vertices[edge3.from_vertex].position;
+
+            let (bax, bay, baz) = (ax - bx, ay - by, az - bz);
+            let (bcx, bcy, bcz) = (cx - bx, cy - by, cz - bz);
+
+            // compute the cross product bc x ba
+            // |  x   y   z  |
+            // | bcx bcy bcz |
+            // | bax bay baz |
+            let nx = bcy * baz - bcz * bay;
+            let ny = bcz * bax - bcx * baz;
+            let nz = bcx * bay - bcy * bax;
+
+            let length = (nx * nx + ny * ny + nz * nz).sqrt();
+            face.normal = Some((nx / length, ny / length, nz / length));
+        }
+    }
+
     pub fn all_vertices(&self) -> std::slice::Iter<Vertex> {
         self.vertices.iter()
     }
@@ -132,9 +166,44 @@ impl Mesh {
         FaceEdgeIter::new(self, face)
     }
 
-    pub fn extrude(&mut self, face: usize, _extrude_dist: f64) -> usize {
-        println!("implement extrude()!");
-        face
+    pub fn extrude(&mut self, face_index: usize, extrude_dist: f64) -> usize {
+        let face = &mut self.faces[face_index];
+        let (nx, ny, nz) = face.normal.unwrap();
+
+        // TODO: remove the old face
+
+        let old_vertices: Vec<usize> = self.face_edge_iter(face_index)
+            .map(|edge| edge.from_vertex)
+            .collect();
+        let new_vertices: Vec<usize> = old_vertices.iter()
+            .map(|i| {
+                let (x, y, z) = self.vertices[*i].position;
+                let extrude_position = (
+                    x + extrude_dist * nx,
+                    y + extrude_dist * ny,
+                    z + extrude_dist * nz
+                );
+                self.add_vertex(extrude_position)
+            })
+            .collect();
+        
+        // Create new faces for the sides
+        // new1 -- new2
+        //  |       |
+        // old1 -- old2
+        let n = old_vertices.len();
+        for i in 0..n {
+            let old1 = old_vertices[i];
+            let old2 = old_vertices[(i + 1) % n];
+            let new1 = new_vertices[i];
+            let new2 = new_vertices[(i + 1) % n];
+
+            // TODO: This should check for existing edges
+            self.add_face(vec![old1, old2, new2, new1]);
+        }
+
+        // create a face for the top;
+        self.add_face(new_vertices)
     }
 
     pub fn extrude_profile(&mut self, face: usize, _profile: Vec<(i32, i32)>) -> usize {
@@ -184,6 +253,17 @@ impl<'a> FaceEdgeIter<'a> {
             current_edge: Some(first_edge)
         }
     }
+
+    fn advance(&mut self, next_edge: Option<usize>) {
+        self.current_edge = match next_edge {
+            Some(edge) => if edge == self.first_edge { 
+                None 
+            } else {
+                Some(edge)
+            },
+            None => None
+        };
+    }
 }
 
 impl<'a> Iterator for FaceEdgeIter<'a> {
@@ -194,15 +274,7 @@ impl<'a> Iterator for FaceEdgeIter<'a> {
 
             // Use the next pointer, but if we returned to the start,
             // mark the end of iteration.
-            self.current_edge = match current.next {
-                Some(edge) => if edge == self.first_edge { 
-                    None 
-                } else {
-                    Some(edge)
-                },
-                None => None
-            };
-
+            self.advance(current.next);
             Some(current)
         } else {
             None
