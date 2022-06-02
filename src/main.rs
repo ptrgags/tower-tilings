@@ -9,12 +9,14 @@ fn main() {
     let b = mesh.add_vertex((1.0, 0.0, 0.0));
     let c = mesh.add_vertex((0.5, 1.0, 0.0));
 
-    let _ = mesh.add_face(vec![c, b, a]);
-    let top_face = mesh.add_face(vec![a, b, c]);
+    let _ = mesh.add_face(&[c, b, a]);
+    let top_face = mesh.add_face(&[a, b, c]);
 
     // must be called before extrude()
     mesh.compute_face_normals();
-    let top_face = mesh.extrude(top_face, 0.5);
+    let top_face = mesh.extrude(top_face, 0.2);
+
+    mesh.compute_face_normals();
 
     let profile = vec![
         (1, 0),

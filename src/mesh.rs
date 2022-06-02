@@ -71,7 +71,7 @@ impl Mesh {
         index
     }
 
-    pub fn add_face(&mut self, vertices: Vec<usize>) -> usize {
+    pub fn add_face(&mut self, vertices: &[usize]) -> usize {
         assert!(vertices.len() >= 3, "Must have at least 3 vertices");
 
         let index = self.faces.len();
@@ -199,16 +199,96 @@ impl Mesh {
             let new2 = new_vertices[(i + 1) % n];
 
             // TODO: This should check for existing edges
-            self.add_face(vec![old1, old2, new2, new1]);
+            self.add_face(&[old1, old2, new2, new1]);
         }
 
         // create a face for the top;
-        self.add_face(new_vertices)
+        self.add_face(&new_vertices)
     }
 
-    pub fn extrude_profile(&mut self, face: usize, _profile: Vec<(i32, i32)>) -> usize {
-        println!("implement extrude_profile()!");
-        face
+    fn compute_centroid(positions: &[(f64, f64, f64)]) -> (f64, f64, f64) {
+        let mut cx = 0.0;
+        let mut cy = 0.0;
+        let mut cz = 0.0;
+        let n = positions.len() as f64;
+        for (x, y, z) in positions.iter() {
+            cx += x;
+            cy += y;
+            cz += z;
+        }
+
+        (cx / n, cy / n, cz / n)
+    }
+
+    pub fn extrude_profile(&mut self, face: usize, profile: Vec<(i32, i32)>) -> usize {
+        let (nx, ny, nz) = self.faces[face].normal.unwrap();
+        
+        // get the original vertices
+        let old_vertices: Vec<usize> = self.face_edge_iter(face)
+            .map(|e| self.half_edges[e].from_vertex)
+            .collect();
+        let old_positions: Vec<(f64, f64, f64)> = old_vertices.iter()
+            .map(|v| self.vertices[*v].position)
+            .collect();
+
+        // compute the direction towards the center of the face, this
+        // will be used for every extrusion
+        let (cx, cy, cz) = Self::compute_centroid(&old_positions);
+        let center_directions: Vec<(f64, f64, f64)> = old_positions.iter()
+            .map(|(x, y, z)| (cx - x, cy - y, cz - z))
+            .collect();
+
+        // Using a custom coordiate system (center, normal)
+        // where center is the direction from the current face vertex to the
+        // centroid horizontally (center_directions above), and normal is
+        // a height offset. The profile is given in relative offsets
+        const CENTER_STEP: f64 = 1.0 / 8.0;
+        const NORMAL_STEP: f64 = 0.1;
+        let mut profile_c: i32 = 0;
+        let mut profile_n: i32 = 0;
+        let mut all_vertices: Vec<Vec<usize>> = vec![old_vertices];
+        for (center_offset, normal_offset) in profile {
+            profile_c += center_offset;
+            profile_n += normal_offset;
+
+            let dc = profile_c as f64 * CENTER_STEP;
+            let dn = profile_n as f64 * NORMAL_STEP;
+
+            let layer_vertices: Vec<usize> = old_positions.iter()
+                .enumerate()
+                .map(|(i, (x, y, z))| {
+                    let (cx, cy, cz) = center_directions[i];
+                    let position = (
+                        x + dc * cx + dn * nx,
+                        y + dc * cy + dn * ny,
+                        z + dc * cz + dn * nz
+                    );
+                    self.add_vertex(position)
+                })
+                .collect();
+            
+                all_vertices.push(layer_vertices);
+        }
+
+        // Create the sides of the extruded portion
+        for i in 0..(all_vertices.len() - 1) {
+            let current_layer = &all_vertices[i];
+            let next_layer = &all_vertices[i + 1];
+
+            let n = current_layer.len();
+            for j in 0..n {
+                let current1 = current_layer[j];
+                let current2 = current_layer[(j + 1) % n];
+                let next1 = next_layer[j];
+                let next2 = next_layer[(j + 1) % n];
+                self.add_face(&[current1, current2, next2, next1]);
+            }
+        }
+
+        // create a new face on the top
+
+        let top = &all_vertices[all_vertices.len() - 1];
+        self.add_face(top)
     }
 
     pub fn save(&self, fname: &str) {
@@ -295,7 +375,7 @@ mod tests {
         let a = mesh.add_vertex(pos_a);
         let b = mesh.add_vertex(pos_b);
         let c = mesh.add_vertex(pos_c);
-        mesh.add_face(vec![a, b, c]);
+        mesh.add_face(&[a, b, c]);
 
         // Make sure the vertices were added properly
         assert_eq!(mesh.vertices.len(), 3);
