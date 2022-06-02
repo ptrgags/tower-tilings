@@ -2,15 +2,19 @@ mod mesh;
 
 use crate::mesh::Mesh;
 
-fn main() {
+fn make_tower(base: &[(f64, f64, f64)], profile: &[(i32, i32)], fname: &str) {
     let mut mesh = Mesh::new();
 
-    let a = mesh.add_vertex((0.0, 0.0, 0.0));
-    let b = mesh.add_vertex((1.0, 0.0, 0.0));
-    let c = mesh.add_vertex((0.5, 1.0, 0.0));
+    let vertices: Vec<usize> = base.iter()
+        .map(|position| mesh.add_vertex(*position))
+        .collect();
 
-    let _ = mesh.add_face(&[c, b, a]);
-    let top_face = mesh.add_face(&[a, b, c]);
+    let vertices_reversed: Vec<usize> = vertices.iter()
+        .rev()
+        .map(|x| *x)
+        .collect();
+    let _ = mesh.add_face(&vertices_reversed);
+    let top_face = mesh.add_face(&vertices);
 
     // must be called before extrude()
     mesh.compute_face_normals();
@@ -18,6 +22,12 @@ fn main() {
 
     mesh.compute_face_normals();
 
+    mesh.extrude_profile(top_face, profile);
+    mesh.save(fname);
+}
+
+fn main() {
+    // Profile path for both towers
     let profile = vec![
         (1, 0),
         (0, 1),
@@ -37,6 +47,20 @@ fn main() {
         (0, 2)
     ];
 
-    mesh.extrude_profile(top_face, profile);
-    mesh.save("tower.obj");
+    let triangle = [
+        (0.0, 0.0, 0.0),
+        (1.0, 0.0, 0.0),
+        (0.5, 1.0, 0.0),
+    ];
+    make_tower(&triangle, &profile, "tri_tower.obj");
+
+    let hexagon = [
+        (0.0, 0.0, 0.0),
+        (1.0, 0.0, 0.0),
+        (1.5, 1.0, 0.0),
+        (1.0, 2.0, 0.0),
+        (0.0, 2.0, 0.0),
+        (-0.5, 1.0, 0.0),
+    ];
+    make_tower(&hexagon, &profile, "hex_tower.obj");
 }

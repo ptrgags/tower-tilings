@@ -220,7 +220,7 @@ impl Mesh {
         (cx / n, cy / n, cz / n)
     }
 
-    pub fn extrude_profile(&mut self, face: usize, profile: Vec<(i32, i32)>) -> usize {
+    pub fn extrude_profile(&mut self, face: usize, profile: &[(i32, i32)]) -> usize {
         let (nx, ny, nz) = self.faces[face].normal.unwrap();
         
         // get the original vertices
