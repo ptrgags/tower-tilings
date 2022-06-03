@@ -4,7 +4,7 @@ use std::f64::consts::PI;
 
 use crate::vec3::Vec3;
 
-type TilingVector = (i32, i32, i32, i32);
+pub type TilingVector = (i32, i32, i32, i32);
 
 fn make_twelfth_root_basis() -> [Vec3; 12] {
     let mut result = [(0.0, 0.0, 0.0); 12];
@@ -14,6 +14,21 @@ fn make_twelfth_root_basis() -> [Vec3; 12] {
     }
     result
 }
+
+const BASIS_COEFFICIENTS: [TilingVector; 12] = [
+    (1, 0, 0, 0),
+    (0, 1, 0, 0),
+    (0, 0, 1, 0),
+    (0, 0, 0, 1),
+    (-1, 0, 1, 0),
+    (0, -1, 0, 1),
+    (-1, 0, 0, 0),
+    (0, -1, 0, 0),
+    (0, 0, -1, 0),
+    (0, 0, 0, -1),
+    (1, 0, -1, 0),
+    (0, 1, 0, -1),
+];
 
 const GRAPH_PAPER_BASIS: [Vec3; 12] = [
     (1.0, 0.0, 0.0),
@@ -37,11 +52,15 @@ pub enum Basis {
 }
 
 impl Basis {
-    fn get_basis(&self) -> [Vec3; 12] {
+    pub fn get_basis(&self) -> [Vec3; 12] {
         match self {
             Basis::TwelfthRoot => make_twelfth_root_basis(),
             Basis::GraphPaper => GRAPH_PAPER_BASIS
         }
+    }
+
+    pub fn get_coefficients(&self) -> [TilingVector; 12] {
+        BASIS_COEFFICIENTS
     }
 }
 
@@ -56,13 +75,13 @@ pub struct TilingFace {
 
 #[derive(Deserialize)]
 pub struct Seed {
-    position: TilingVector,
+    pub position: TilingVector,
     //anchored_faces: Vec<TilingFace>
 }
 
 #[derive(Deserialize)]
 pub struct IntegerTiling {
-    basis: Basis,
-    translations: [TilingVector; 2],
-    seeds: Vec<Seed>
+    pub basis: Basis,
+    pub translations: [TilingVector; 2],
+    pub seeds: Vec<Seed>
 }

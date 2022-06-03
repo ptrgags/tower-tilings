@@ -1,10 +1,12 @@
 mod mesh;
 mod tiling;
+mod tiling_mesh;
 mod vec3;
 
 use crate::mesh::Mesh;
 use crate::vec3::Vec3;
 use crate::tiling::IntegerTiling;
+use crate::tiling_mesh::TilingMesh;
 
 fn make_tower(base: &[Vec3], profile: &[(i32, i32)], fname: &str) {
     let mut mesh = Mesh::new();
@@ -84,6 +86,8 @@ fn main() {
     }"#;
     
     let tiling: IntegerTiling = serde_json::from_str(tiling_json).unwrap();
+    let mut base_mesh = TilingMesh::new(tiling);
+    base_mesh.compute_mesh("example.obj");
 
     // Profile path for both towers
     let profile = vec![
