@@ -1,8 +1,12 @@
 mod mesh;
+mod tiling;
+mod vec3;
 
 use crate::mesh::Mesh;
+use crate::vec3::Vec3;
+use crate::tiling::IntegerTiling;
 
-fn make_tower(base: &[(f64, f64, f64)], profile: &[(i32, i32)], fname: &str) {
+fn make_tower(base: &[Vec3], profile: &[(i32, i32)], fname: &str) {
     let mut mesh = Mesh::new();
 
     let vertices: Vec<usize> = base.iter()
@@ -27,6 +31,60 @@ fn make_tower(base: &[(f64, f64, f64)], profile: &[(i32, i32)], fname: &str) {
 }
 
 fn main() {
+    let tiling_json = r#"{
+        "basis": "GraphPaper",
+        "translations": [
+            [2, 2, 0, -1],
+            [-1, 0, 2, 2]
+        ],
+        "seeds": [
+            {
+                "position": [0, 0, 0, 0]
+            },
+            {
+                "position": [0, 1, 0, 0]
+            },
+            {
+                "position": [1, 1, 0, 0]
+            },
+            {
+                "position": [1, 2, 0, -1]
+            },
+            {
+                "position": [1, 2, 1, -1]
+            },
+            {
+                "position": [1, 1, 1, 0]
+            },
+            {
+                "position": [1, 2, 1, 0]
+            },
+            {
+                "position": [0, 2, 2, 0]
+            },
+            {
+                "position": [0, 1, 2, 0]
+            },
+            {
+                "position": [0, 1, 2, 1]
+            },
+            {
+                "position": [-1, 1, 2, 0]
+            },
+            {
+                "position": [-1, 1, 2, 1]
+            },
+            {
+                "position": [-1, 0, 2, 1]
+            },
+            {
+                "position": [-1, 1, 1, 0]
+            }
+        ]
+    }"#;
+    
+    let tiling: IntegerTiling = serde_json::from_str(tiling_json).unwrap();
+
     // Profile path for both towers
     let profile = vec![
         (1, 0),
