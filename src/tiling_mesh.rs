@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::tiling::{IntegerTiling, TilingVector};
 use crate::mesh::Mesh;
+use crate::towers::TowerTiling;
 use crate::vec3::Vec3;
 
 #[derive(Debug)]
@@ -30,9 +31,12 @@ impl TilingMesh {
         }
     }
 
-    pub fn compute_mesh(&mut self, fname: &str) {
+    pub fn compute_mesh(&mut self) {
         self.init_cloud();
         self.generate_faces();
+    }
+
+    pub fn save(&self, fname: &str) {
         self.mesh.save(fname);
     }
 
@@ -162,5 +166,17 @@ impl TilingMesh {
             c + dc,
             d + dd
         )
+    }
+
+    pub fn make_towers(&self) -> TowerTiling {
+        // TODO: I shouldn't be able to do this.
+        let n = self.mesh.faces.len();
+        let mut towers = TowerTiling::new();
+        for face in 0..n {
+            let base = self.mesh.get_face_positions(face);
+            towers.add_tower(&base, &[]);
+        }
+
+        towers
     }
 }

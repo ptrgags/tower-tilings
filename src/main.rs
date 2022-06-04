@@ -1,6 +1,7 @@
 mod mesh;
 mod tiling;
 mod tiling_mesh;
+mod towers;
 mod vec3;
 
 use crate::mesh::Mesh;
@@ -34,7 +35,7 @@ fn make_tower(base: &[Vec3], profile: &[(i32, i32)], fname: &str) {
 
 fn main() {
     let tiling_json = r#"{
-        "basis": "GraphPaper",
+        "basis": "TwelfthRoot",
         "translations": [
             [2, 2, 0, -1],
             [-1, 0, 2, 2]
@@ -87,7 +88,10 @@ fn main() {
     
     let tiling: IntegerTiling = serde_json::from_str(tiling_json).unwrap();
     let mut base_mesh = TilingMesh::new(tiling);
-    base_mesh.compute_mesh("example.obj");
+    base_mesh.compute_mesh();
+    base_mesh.save("output/test-base.obj");
+    let towers = base_mesh.make_towers();
+    towers.save("output/test-towers");
 
     // Profile path for both towers
     let profile = vec![
@@ -114,7 +118,7 @@ fn main() {
         (1.0, 0.0, 0.0),
         (0.5, 1.0, 0.0),
     ];
-    make_tower(&triangle, &profile, "tri_tower.obj");
+    make_tower(&triangle, &profile, "output/tri_tower.obj");
 
     let hexagon = [
         (0.0, 0.0, 0.0),
@@ -124,5 +128,5 @@ fn main() {
         (0.0, 2.0, 0.0),
         (-0.5, 1.0, 0.0),
     ];
-    make_tower(&hexagon, &profile, "hex_tower.obj");
+    make_tower(&hexagon, &profile, "output/hex_tower.obj");
 }

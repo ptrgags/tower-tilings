@@ -2,16 +2,20 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::LineWriter;
 
+use crate::vec3::Vec3;
+
 pub struct Vertex {
-    pub position: (f64, f64, f64),
+    pub position: Vec3,
     pub half_edge: Option<usize>,
+    pub deleted: bool
 }
 
 impl Vertex {
-    pub fn new(position: (f64, f64, f64)) -> Self {
+    pub fn new(position: Vec3) -> Self {
         Self {
             position,
-            half_edge: None
+            half_edge: None,
+            deleted: false
         }
     }
 }
@@ -38,7 +42,7 @@ impl HalfEdge {
 
 pub struct Face {
     pub half_edge: usize,
-    pub normal: Option<(f64, f64, f64)>,
+    pub normal: Option<Vec3>,
 }
 
 impl Face {
@@ -65,7 +69,7 @@ impl Mesh {
         }
     }
 
-    pub fn add_vertex(&mut self, position: (f64, f64, f64)) -> usize {
+    pub fn add_vertex(&mut self, position: Vec3) -> usize {
         let index = self.vertices.len();
         self.vertices.push(Vertex::new(position));
         index
@@ -166,6 +170,14 @@ impl Mesh {
         FaceEdgeIter::new(self, face)
     }
 
+    pub fn get_face_positions(&self, face: usize) -> Vec<Vec3> {
+        self.face_edge_iter(face)
+            .map(|e| {
+                let index = self.half_edges[e].from_vertex;
+                self.vertices[index].position
+            }).collect()
+    }
+
     pub fn extrude(&mut self, face_index: usize, extrude_dist: f64) -> usize {
         let face = &mut self.faces[face_index];
         let (nx, ny, nz) = face.normal.unwrap();
@@ -206,7 +218,7 @@ impl Mesh {
         self.add_face(&new_vertices)
     }
 
-    fn compute_centroid(positions: &[(f64, f64, f64)]) -> (f64, f64, f64) {
+    fn compute_centroid(positions: &[Vec3]) -> Vec3 {
         let mut cx = 0.0;
         let mut cy = 0.0;
         let mut cz = 0.0;
@@ -227,14 +239,14 @@ impl Mesh {
         let old_vertices: Vec<usize> = self.face_edge_iter(face)
             .map(|e| self.half_edges[e].from_vertex)
             .collect();
-        let old_positions: Vec<(f64, f64, f64)> = old_vertices.iter()
+        let old_positions: Vec<Vec3> = old_vertices.iter()
             .map(|v| self.vertices[*v].position)
             .collect();
 
         // compute the direction towards the center of the face, this
         // will be used for every extrusion
         let (cx, cy, cz) = Self::compute_centroid(&old_positions);
-        let center_directions: Vec<(f64, f64, f64)> = old_positions.iter()
+        let center_directions: Vec<Vec3> = old_positions.iter()
             .map(|(x, y, z)| (cx - x, cy - y, cz - z))
             .collect();
 
