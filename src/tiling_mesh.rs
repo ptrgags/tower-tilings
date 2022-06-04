@@ -17,7 +17,11 @@ pub struct TilingMesh {
     mesh: Mesh,
     cloud: HashMap<TilingVector, CloudVertex>,
     tiling: IntegerTiling,
-    basis_coefficients: [TilingVector; 12]
+    basis_coefficients: [TilingVector; 12],
+    // In the tiling, face descriptors are stored as
+    // tiling.seeds[seed_index].faces?[face_index] if this exists.
+    // this table is a map from global_face_index -> (seed_index, face_index)
+    anchored_faces: Vec<(usize, usize)>
 }
 
 impl TilingMesh {
@@ -27,7 +31,8 @@ impl TilingMesh {
             mesh: Mesh::new(),
             cloud: HashMap::new(),
             tiling,
-            basis_coefficients
+            basis_coefficients,
+            anchored_faces: Vec::new()
         }
     }
 
@@ -92,6 +97,7 @@ impl TilingMesh {
         for i in 0..(n - 1) {
             let first_direction = star_directions[i];
             self.generate_face(seed, first_direction);
+            self.anchored_faces.push((seed, i));
         }
     }
 
@@ -133,7 +139,7 @@ impl TilingMesh {
             }
         }
 
-        self.mesh.add_face(&face_vertices);
+        self.mesh.add_face(&face_vertices);   
     }
 
     fn to_world(&self, coefficients: TilingVector) -> Vec3 {
@@ -173,8 +179,19 @@ impl TilingMesh {
         let n = self.mesh.faces.len();
         let mut towers = TowerTiling::new();
         for face in 0..n {
+            let (seed, anchored_face) = self.anchored_faces[face];
+
+            let empty = Vec::new();
+            let mut profile = &empty;
+
+            if let Some(faces) = &self.tiling.seeds[seed].faces {
+                if let Some(profile_index) = faces[anchored_face].profile {
+                    profile = &self.tiling.profiles[profile_index].offsets;
+                }
+            }
+
             let base = self.mesh.get_face_positions(face);
-            towers.add_tower(&base, &[]);
+            towers.add_tower(&base, profile);
         }
 
         towers

@@ -30,3 +30,20 @@ near future
 Next Steps:
 
 * Debug the mesh generation
+
+## 2022-06-04 Tiling of Towers
+
+Today I debugged the integer tiling code, and combined it with the tower
+extrusion code to make a bunch of towers that fit together in a tiling.
+
+![Example output](figures/test-tiling-output.png)
+
+Next Steps:
+
+* Instead of saving many disjoint models, generate one GLB file with multiple
+    primitives
+* Also use the glTF extension EXT_mesh_gpu_instancing to make many copies of
+    the fundamental domain
+* Color each tower a different color! or otherwise adjust material properties
+* Design more tilings!
+* Clean up the extrusion code so it doesn't create extraneous faces
