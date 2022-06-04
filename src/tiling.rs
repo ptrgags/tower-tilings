@@ -64,24 +64,29 @@ impl Basis {
     }
 }
 
-/* TODO: Not yet but soon.
+#[derive(Deserialize)]
+pub struct Profile {
+    pub name: Option<String>,
+    pub offsets: Vec<(i32, i32)>
+}
+
 #[derive(Deserialize)]
 pub struct TilingFace {
     // Redundant, but helpful for debugging
-    sides: usize,
-    profile: Option<Vec<(i32, i32)>>
+    pub sides: usize,
+    pub profile: Option<usize>
 }
-*/
 
 #[derive(Deserialize)]
 pub struct Seed {
     pub position: TilingVector,
-    //anchored_faces: Vec<TilingFace>
+    pub faces: Option<Vec<TilingFace>>
 }
 
 #[derive(Deserialize)]
 pub struct IntegerTiling {
     pub basis: Basis,
     pub translations: [TilingVector; 2],
-    pub seeds: Vec<Seed>
+    pub seeds: Vec<Seed>,
+    pub profiles: Vec<Profile>
 }

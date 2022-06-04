@@ -4,6 +4,9 @@ mod tiling_mesh;
 mod towers;
 mod vec3;
 
+use std::fs::File;
+use std::io::BufReader;
+
 use crate::mesh::Mesh;
 use crate::vec3::Vec3;
 use crate::tiling::IntegerTiling;
@@ -34,59 +37,11 @@ fn make_tower(base: &[Vec3], profile: &[(i32, i32)], fname: &str) {
 }
 
 fn main() {
-    let tiling_json = r#"{
-        "basis": "TwelfthRoot",
-        "translations": [
-            [2, 2, 0, -1],
-            [-1, 0, 2, 2]
-        ],
-        "seeds": [
-            {
-                "position": [0, 0, 0, 0]
-            },
-            {
-                "position": [0, 1, 0, 0]
-            },
-            {
-                "position": [1, 1, 0, 0]
-            },
-            {
-                "position": [1, 2, 0, -1]
-            },
-            {
-                "position": [1, 2, 1, -1]
-            },
-            {
-                "position": [1, 1, 1, 0]
-            },
-            {
-                "position": [1, 2, 1, 0]
-            },
-            {
-                "position": [0, 2, 2, 0]
-            },
-            {
-                "position": [0, 1, 2, 0]
-            },
-            {
-                "position": [0, 1, 2, 1]
-            },
-            {
-                "position": [-1, 1, 2, 0]
-            },
-            {
-                "position": [-1, 1, 2, 1]
-            },
-            {
-                "position": [-1, 0, 2, 1]
-            },
-            {
-                "position": [-1, 1, 1, 0]
-            }
-        ]
-    }"#;
+
+    let file = File::open("input/test-tiling.json").unwrap();
+    let reader = BufReader::new(file);
     
-    let tiling: IntegerTiling = serde_json::from_str(tiling_json).unwrap();
+    let tiling: IntegerTiling = serde_json::from_reader(reader).unwrap();
     let mut base_mesh = TilingMesh::new(tiling);
     base_mesh.compute_mesh();
     base_mesh.save("output/test-base.obj");
