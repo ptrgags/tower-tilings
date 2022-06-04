@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 
-use crate::tiling::{IntegerTiling, Seed, TilingVector};
+use crate::tiling::{IntegerTiling, TilingVector};
 use crate::mesh::Mesh;
 use crate::vec3::Vec3;
 
+#[derive(Debug)]
 pub struct CloudVertex {
     seed: TilingVector,
     outside: bool,
@@ -42,8 +43,8 @@ impl TilingMesh {
         ] = self.tiling.translations;
         for seed in self.tiling.seeds.iter() {
             let (a, b, c, d) = seed.position;
-            for i in -1..1 {
-                for j in -1..1 {
+            for i in -1..=1 {
+                for j in -1..=1 {
                     let instance = (
                         a + i * a1 + j * a2,
                         b + i * b1 + j * b2,
@@ -70,6 +71,7 @@ impl TilingMesh {
 
     fn generate_faces(&mut self) {
         let n = self.tiling.seeds.len();
+
         for i in 0..n {
             self.generate_seed_faces(i);
         }
@@ -93,7 +95,7 @@ impl TilingMesh {
         let mut star_directions = Vec::new();
         let seed_position = self.tiling.seeds[seed].position;
 
-        for k in start_angle..end_angle {
+        for k in start_angle..=end_angle {
             let index = k % 12;
             let adjacent = self.get_adjacent(seed_position, index);
 
