@@ -7,8 +7,6 @@ use crate::vec3::Vec3;
 
 #[derive(Debug)]
 pub struct CloudVertex {
-    seed: TilingVector,
-    outside: bool,
     // index in the mesh before garbage collection.
     index: usize
 }
@@ -21,7 +19,8 @@ pub struct TilingMesh {
     // In the tiling, face descriptors are stored as
     // tiling.seeds[seed_index].faces?[face_index] if this exists.
     // this table is a map from global_face_index -> (seed_index, face_index)
-    anchored_faces: Vec<(usize, usize)>
+    anchored_faces: Vec<(usize, usize)>,
+    towers: TowerTiling
 }
 
 impl TilingMesh {
@@ -32,7 +31,8 @@ impl TilingMesh {
             cloud: HashMap::new(),
             tiling,
             basis_coefficients,
-            anchored_faces: Vec::new()
+            anchored_faces: Vec::new(),
+            towers: TowerTiling::new()
         }
     }
 
@@ -41,8 +41,8 @@ impl TilingMesh {
         self.generate_faces();
     }
 
-    pub fn save(&self, fname: &str) {
-        self.mesh.save(fname);
+    pub fn save_base(&self, fname: &str) {
+        self.mesh.save_obj(fname);
     }
 
     fn init_cloud(&mut self) {
@@ -65,11 +65,8 @@ impl TilingMesh {
                     // the unused ones at the end.
                     let world_position = self.to_world(instance);
                     let index = self.mesh.add_vertex(world_position);
-                    
-                    let outside = i != 0 || j != 0;
+
                     let vertex = CloudVertex {
-                        seed: seed.position,
-                        outside,
                         index
                     };
                     self.cloud.insert(instance, vertex);
@@ -174,26 +171,29 @@ impl TilingMesh {
         )
     }
 
-    pub fn make_towers(&self) -> TowerTiling {
+    pub fn make_towers(&mut self) {
         // TODO: I shouldn't be able to do this.
         let n = self.mesh.faces.len();
-        let mut towers = TowerTiling::new();
         for face in 0..n {
             let (seed, anchored_face) = self.anchored_faces[face];
 
             let empty = Vec::new();
             let mut profile = &empty;
+            let mut material = 0;
 
             if let Some(faces) = &self.tiling.seeds[seed].faces {
+                material = faces[anchored_face].material;
                 if let Some(profile_index) = faces[anchored_face].profile {
                     profile = &self.tiling.profiles[profile_index].offsets;
                 }
             }
 
             let base = self.mesh.get_face_positions(face);
-            towers.add_tower(&base, profile);
+            self.towers.add_tower(&base, profile, material);
         }
+    }
 
-        towers
+    pub fn save_towers(&self, fname: &str) {
+        self.towers.save_glb(fname, &self.tiling);
     }
 }

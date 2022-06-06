@@ -1,18 +1,22 @@
+use crate::gltf::Gltf;
 use crate::mesh::Mesh;
+use crate::tiling::IntegerTiling;
 use crate::vec3::Vec3;
 
 pub struct TowerTiling {
-    meshes: Vec<Mesh>
+    meshes: Vec<Mesh>,
+    materials: Vec<usize>
 }
 
 impl TowerTiling {
     pub fn new() -> Self {
         Self {
-            meshes: Vec::new()
+            meshes: Vec::new(),
+            materials: Vec::new(),
         }
     }
 
-    pub fn add_tower(&mut self, base: &[Vec3], profile: &[(i32, i32)]) {
+    pub fn add_tower(&mut self, base: &[Vec3], profile: &[(i32, i32)], material: usize) {
         let mut mesh = Mesh::new();
 
         // TODO: for glTF exporting, consider centering on
@@ -39,12 +43,25 @@ impl TowerTiling {
         }
 
         self.meshes.push(mesh);
+        self.materials.push(material);
     }
 
-    pub fn save(&self, fname_prefix: &str) {
+    pub fn save_obj(&self, fname_prefix: &str) {
         for (i, mesh) in self.meshes.iter().enumerate() {
             let fname = format!("{}_{}.obj", fname_prefix, i);
-            mesh.save(&fname);
+            mesh.save_obj(&fname);
         }
+    }
+
+    pub fn save_glb(&self, fname: &str, tiling: &IntegerTiling) {
+        let mut gltf = Gltf::new();
+        gltf.add_materials(tiling.materials.clone());
+
+        for (i, mesh) in self.meshes.iter().enumerate() {
+            let material = self.materials[i];
+            //TODO: gltf.add_primitive(mesh, material);
+        }
+
+        //gltf.save(fname);
     }
 }

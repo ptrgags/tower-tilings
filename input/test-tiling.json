@@ -1,5 +1,17 @@
 {
     "basis": "TwelfthRoot",
+    "materials": [
+        {
+            "base_color": [1, 0, 0],
+            "metallic": 0,
+            "roughness": 0.5
+        },
+        {
+            "base_color": [0, 0.5, 0],
+            "metallic": 1.0,
+            "roughness": 0.1
+        }
+    ],
     "translations": [
         [2, 2, 0, -1],
         [-1, 0, 2, 2]
@@ -99,7 +111,8 @@
             "faces": [
                 {
                     "sides": 3,
-                    "profile": 0
+                    "profile": 0,
+                    "material": 0
                 }
             ]
         },
@@ -111,7 +124,8 @@
             "faces": [
                 {
                     "sides": 4,
-                    "profile": 1
+                    "profile": 1,
+                    "material": 0
                 }
             ]
         },
@@ -120,7 +134,8 @@
             "faces": [
                 {
                     "sides": 3,
-                    "profile": 2
+                    "profile": 2,
+                    "material": 1
                 }
             ]
         },
@@ -129,11 +144,13 @@
             "faces": [
                 {
                     "sides": 4,
-                    "profile": 1
+                    "profile": 1,
+                    "material": 0
                 },
                 {
                     "sides": 3,
-                    "profile": 0
+                    "profile": 0,
+                    "material": 0
                 }
             ]
         },
@@ -142,7 +159,8 @@
             "faces": [
                 {
                     "sides": 3,
-                    "profile": 0
+                    "profile": 0,
+                    "material": 0
                 }
             ]
         },
@@ -151,7 +169,8 @@
             "faces": [
                 {
                     "sides": 4,
-                    "profile": 1
+                    "profile": 1,
+                    "material": 0
                 }
             ]
         },
@@ -160,11 +179,13 @@
             "faces": [
                 {
                     "sides": 3,
-                    "profile": 2
+                    "profile": 2,
+                    "material": 1
                 },
                 {
                     "sides": 4,
-                    "profile": 3
+                    "profile": 3,
+                    "material": 1
                 }
             ]
         },
@@ -173,11 +194,13 @@
             "faces": [
                 {
                     "sides": 4,
-                    "profile": 1
+                    "profile": 1,
+                    "material": 0
                 },
                 {
                     "sides": 3,
-                    "profile": 0
+                    "profile": 0,
+                    "material": 0
                 }
             ]
         },
@@ -186,11 +209,13 @@
             "faces": [
                 {
                     "sides": 3,
-                    "profile": 2
+                    "profile": 2,
+                    "material": 1
                 },
                 {
                     "sides": 3,
-                    "profile": 0
+                    "profile": 0,
+                    "material": 0
                 }
             ]
         },
@@ -199,7 +224,8 @@
             "faces": [
                 {
                     "sides": 4,
-                    "profile": 1
+                    "profile": 1,
+                    "material": 0
                 }
             ]
         },
@@ -208,7 +234,8 @@
             "faces": [
                 {
                     "sides": 4,
-                    "profile": 1
+                    "profile": 1,
+                    "material": 0
                 }
             ]
         },
@@ -217,11 +244,13 @@
             "faces": [
                 {
                     "sides": 3,
-                    "profile": 0
+                    "profile": 0,
+                    "material": 0
                 },
                 {
                     "sides": 3,
-                    "profile": 2
+                    "profile": 2,
+                    "material": 1
                 }
             ]
         },
@@ -230,7 +259,8 @@
             "faces": [
                 {
                     "sides": 6,
-                    "profile": 4
+                    "profile": 4,
+                    "material": 0
                 }
             ]
         }

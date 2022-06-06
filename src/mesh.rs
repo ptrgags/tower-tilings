@@ -303,7 +303,7 @@ impl Mesh {
         self.add_face(top)
     }
 
-    pub fn save(&self, fname: &str) {
+    pub fn save_obj(&self, fname: &str) {
         let file = File::create(fname).expect("could not open file");
         let mut file = LineWriter::new(file);
 

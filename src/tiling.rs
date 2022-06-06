@@ -1,6 +1,7 @@
-use serde::Deserialize;
-
 use std::f64::consts::PI;
+
+use serde::Deserialize;
+use serde_json::json;
 
 use crate::vec3::Vec3;
 
@@ -70,11 +71,34 @@ pub struct Profile {
     pub offsets: Vec<(i32, i32)>
 }
 
+/// Simplified material that can be converted to a glTF
+/// PBR material
+#[derive(Deserialize, Clone)]
+pub struct Material {
+    pub base_color: Vec3,
+    pub metallic: f64,
+    pub roughness: f64
+}
+
+impl Material {
+    pub fn to_json(&self) -> serde_json::Value {
+        json!({
+            "pbrMetallicRoughness": {
+                "baseColorFactor": self.base_color,
+                "metallicFactor": self.metallic,
+                "roughnessFactor": self.roughness
+            }
+        })
+    }
+}
+
+
 #[derive(Deserialize)]
 pub struct TilingFace {
     // Redundant, but helpful for debugging
     pub sides: usize,
-    pub profile: Option<usize>
+    pub profile: Option<usize>,
+    pub material: usize
 }
 
 #[derive(Deserialize)]
@@ -88,5 +112,6 @@ pub struct IntegerTiling {
     pub basis: Basis,
     pub translations: [TilingVector; 2],
     pub seeds: Vec<Seed>,
-    pub profiles: Vec<Profile>
+    pub profiles: Vec<Profile>,
+    pub materials: Vec<Material>,
 }
