@@ -47,3 +47,25 @@ Next Steps:
 * Color each tower a different color! or otherwise adjust material properties
 * Design more tilings!
 * Clean up the extrusion code so it doesn't create extraneous faces
+
+## 2022-06-09 WIP on GLB Output
+
+The next step is creating GLB output. This is a bit involved given all the
+levels of indirection, but so far I think the architecture is starting to
+fall in place.
+
+I add a primitive, which in turn adds accessors for each attribute/indices,
+which in turn add buffer views. The geometry data is reformatted as `Vec<u8>`
+and moved into one big buffer, but the indices are saved in structs for
+generating the JSON.
+
+I still have a couple portions of this code to go: triangulating the mesh
+to produce the positions/normals/indices, and writing the GLB file. And of
+course the inevitable debugging of the GLB output, binary formats are difficult
+to get right on the first try
+
+Next Steps:
+
+* Finish GLB output as described above
+* I designed some tilings on paper, try them out
+* Clean up extrusion code
