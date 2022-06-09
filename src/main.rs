@@ -21,5 +21,5 @@ fn main() {
     towers.compute_mesh();
     towers.save_base("output/test-base.obj");
     towers.make_towers();
-    towers.save_towers("output/test-towers.glb");
+    towers.save_towers("output/test-towers.glb", 3);
 }

@@ -53,15 +53,19 @@ impl TowerTiling {
         }
     }
 
-    pub fn save_glb(&self, fname: &str, tiling: &IntegerTiling) {
+    pub fn save_glb(&self, fname: &str, tiling: &IntegerTiling, instance_offsets: Vec<Vec3>) {
         let mut gltf = Gltf::new();
         gltf.add_materials(tiling.materials.clone());
 
+        gltf.add_instances(instance_offsets);
+
         for (i, mesh) in self.meshes.iter().enumerate() {
             let material = self.materials[i];
-            //TODO: gltf.add_primitive(mesh, material);
+            gltf.add_primitive(mesh, material);
         }
 
-        //gltf.save(fname);
+        gltf.save(fname);
     }
+
+    
 }

@@ -303,6 +303,16 @@ impl Mesh {
         self.add_face(top)
     }
 
+    pub fn triangulate(&self) -> (Vec<Vec3>, Vec<Vec3>, Vec<u32>) {
+        let mut positions = Vec::new();
+        let mut normals = Vec::new();
+        let mut indices = Vec::new();
+
+        println!("TODO: triangulate()")
+
+        (positions, normals, indices)
+    }
+
     pub fn save_obj(&self, fname: &str) {
         let file = File::create(fname).expect("could not open file");
         let mut file = LineWriter::new(file);

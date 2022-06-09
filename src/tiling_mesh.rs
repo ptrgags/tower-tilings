@@ -193,7 +193,31 @@ impl TilingMesh {
         }
     }
 
-    pub fn save_towers(&self, fname: &str) {
-        self.towers.save_glb(fname, &self.tiling);
+    pub fn save_towers(&self, fname: &str, instancing_radius: isize) {
+        let offsets = self.make_instance_offsets(instancing_radius);
+        self.towers.save_glb(fname, &self.tiling, offsets);
+    }
+
+    fn make_instance_offsets(&self, radius: isize) -> Vec<Vec3> {
+        let [a, b] = self.tiling.translations;
+        let a = self.to_world(a);
+        let b = self.to_world(b);
+
+        let (ax, ay, az) = a;
+        let (bx, by, bz) = b;
+
+        let mut result = Vec::new();
+        for i in -radius..=radius {
+            let i_f64 = i as f64;
+            for j in -radius..=radius {
+                let j_f64 = j as f64;
+                let x = i_f64 * ax + j_f64 * bx;
+                let y = i_f64 * ay + j_f64 * by;
+                let z = i_f64 * az + j_f64 * bz;
+                result.push((x, y, z));
+            }
+        }
+
+        result
     }
 }
