@@ -69,3 +69,10 @@ Next Steps:
 * Finish GLB output as described above
 * I designed some tilings on paper, try them out
 * Clean up extrusion code
+
+## 2022-06-10 Still WIP
+
+Today I continued to work on the GLB output. I have it producing a GLB
+file, though there's still some debugging. The glTF validator says there
+are normals that are not unit length or have NaNs. I have some debugging to
+do this weekend then.
