@@ -308,9 +308,37 @@ impl Mesh {
         let mut normals = Vec::new();
         let mut indices = Vec::new();
 
-        println!("TODO: triangulate()")
+        for (i, face) in self.faces.iter().enumerate() {
+            let normal = face.normal.unwrap();
+
+            let ngon_indices: Vec<usize> = self.face_edge_iter(i)
+                .map(|i| self.half_edges[i].from_vertex)
+                .collect();
+
+            for index in Self::triangulate_ngon(ngon_indices) {
+                indices.push(index as u32);
+                positions.push(self.vertices[index].position);
+                normals.push(normal);
+            }
+        }
 
         (positions, normals, indices)
+    }
+
+    pub fn triangulate_ngon(indices: Vec<usize>) -> Vec<usize> {
+        let mut result = Vec::new();
+
+        let first = indices[0];
+        let n = indices.len();
+        for i in 0..(n - 2) {
+            let second = indices[i + 1];
+            let third = indices[i + 2];
+            result.push(first);
+            result.push(second);
+            result.push(third);
+        }
+
+        result
     }
 
     pub fn save_obj(&self, fname: &str) {

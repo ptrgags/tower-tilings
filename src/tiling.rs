@@ -82,9 +82,11 @@ pub struct Material {
 
 impl Material {
     pub fn to_json(&self) -> serde_json::Value {
+        let (r, g, b) = self.base_color;
+
         json!({
             "pbrMetallicRoughness": {
-                "baseColorFactor": self.base_color,
+                "baseColorFactor": [r, g, b, 1.0],
                 "metallicFactor": self.metallic,
                 "roughnessFactor": self.roughness
             }

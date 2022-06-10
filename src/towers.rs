@@ -36,16 +36,21 @@ impl TowerTiling {
         mesh.compute_face_normals();
         let top_face = mesh.extrude(top_face, 0.2);
 
+        // Compute normals for the new faces
         mesh.compute_face_normals();
 
         if profile.len() > 0 {
             mesh.extrude_profile(top_face, profile);
         }
 
+        // Make sure normals exist for export purposes
+        mesh.compute_face_normals();
+
         self.meshes.push(mesh);
         self.materials.push(material);
     }
 
+    #[allow(dead_code)]
     pub fn save_obj(&self, fname_prefix: &str) {
         for (i, mesh) in self.meshes.iter().enumerate() {
             let fname = format!("{}_{}.obj", fname_prefix, i);
@@ -66,6 +71,4 @@ impl TowerTiling {
 
         gltf.save(fname);
     }
-
-    
 }

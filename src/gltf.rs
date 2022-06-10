@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::fs::File;
+use std::io::prelude::*;
 
 use chrono::{Datelike, Utc};
 use serde_json::json;
@@ -9,11 +11,14 @@ use crate::vec3::Vec3;
 
 const GLTF_FLOAT: u32 = 5126;
 const GLTF_UNSIGNED_INT: u32 = 5125;
+const GLTF_TARGET_ARRAY_BUFFER: u32 = 34962;
+const GLTF_TARGET_ELEMENT_ARRAY_BUFFER: u32 = 34963;
 
 pub struct BufferView {
     name: String,
     byte_offset: usize,
-    byte_length: usize
+    byte_length: usize,
+    target: u32
 
     // no padding needed since everything is a vec3 or u32
 }
@@ -30,6 +35,7 @@ impl BufferView {
             "buffer": 0,
             "byteOffset": self.byte_offset,
             "byteLength": self.byte_length,
+            "target": self.target
         })
     }
 }
@@ -122,9 +128,7 @@ impl Gltf {
         self.materials = materials;
     }
 
-    
-
-    fn add_buffer_view(&mut self, name: &str, data: Vec<u8>) -> usize {
+    fn add_buffer_view(&mut self, name: &str, mut data: Vec<u8>, is_indices: bool) -> usize {
         let index = self.buffer_views.len();
 
         // Compute the offset for this buffer view
@@ -134,10 +138,17 @@ impl Gltf {
             self.buffer_views[index - 1].after_offset()
         };
 
+        let target = if is_indices {
+            GLTF_TARGET_ELEMENT_ARRAY_BUFFER
+        } else {
+            GLTF_TARGET_ARRAY_BUFFER
+        };
+
         let buffer_view = BufferView {
             name: String::from(name),
             byte_offset,
-            byte_length: data.len()
+            byte_length: data.len(),
+            target
         };
 
         self.buffer_views.push(buffer_view);
@@ -194,13 +205,13 @@ impl Gltf {
         let count = positions.len();
         let (min, max) = Self::get_min_max(&positions);
         let buffer_view_data = Self::pack_vec3s(positions);
-        let buffer_view = self.add_buffer_view("Indices", buffer_view_data);
+        let buffer_view = self.add_buffer_view("Position", buffer_view_data, false);
 
         self.add_accesor(Accessor {
-            name: String::from("Indices"),
+            name: String::from("Position"),
             buffer_view: buffer_view,
-            accessor_type: String::from("SCALAR"),
-            component_type: GLTF_UNSIGNED_INT,
+            accessor_type: String::from("VEC3"),
+            component_type: GLTF_FLOAT,
             count,
             min: Some(min),
             max: Some(max)
@@ -210,7 +221,7 @@ impl Gltf {
     fn add_normal_accessor(&mut self, normals: Vec<Vec3>) -> usize {
         let count = normals.len();
         let buffer_view_data = Self::pack_vec3s(normals);
-        let buffer_view = self.add_buffer_view("Normals", buffer_view_data);
+        let buffer_view = self.add_buffer_view("Normals", buffer_view_data, false);
 
         self.add_accesor(Accessor {
             name: String::from("Normals"),
@@ -229,7 +240,7 @@ impl Gltf {
         for index in indices {
             buffer_view_data.extend_from_slice(&index.to_le_bytes())
         }
-        let buffer_view = self.add_buffer_view("Indices", buffer_view_data);
+        let buffer_view = self.add_buffer_view("Indices", buffer_view_data, true);
 
         self.add_accesor(Accessor {
             name: String::from("Indices"),
@@ -245,7 +256,7 @@ impl Gltf {
     pub fn add_instances(&mut self, translations: Vec<Vec3>) {
         let count = translations.len();
         let buffer_view_data = Self::pack_vec3s(translations);
-        let buffer_view = self.add_buffer_view("Instance TRANSLATION", buffer_view_data);
+        let buffer_view = self.add_buffer_view("Instance TRANSLATION", buffer_view_data, false);
 
         let accessor = self.add_accesor(Accessor {
             name: String::from("Instance TRANSLATION"),
@@ -282,7 +293,62 @@ impl Gltf {
     }
 
     pub fn save(&self, fname: &str) {
-        todo!();
+        let json_bytes: Vec<u8> = serde_json::ser::to_vec(&self.to_json())
+            .expect("Could not serialize JSON");
+        let json_length = json_bytes.len() as u32;
+        let json_padding_length = Self::get_padding_length(json_length);
+        let json_padding = Self::make_padding(json_padding_length, b' ');
+        let json_chunk_length = json_length + json_padding_length;
+
+        let binary_chunk_length = self.buffer_data.len() as u32;
+
+        const HEADER_LENGTH: u32 = 12;
+        const CHUNK_HEADER_LENGTH: u32 = 8;
+        let total_length =
+            HEADER_LENGTH +
+            CHUNK_HEADER_LENGTH +
+            json_chunk_length +
+            CHUNK_HEADER_LENGTH +
+            binary_chunk_length;
+
+        let mut file = File::create(fname).expect("Could not create file");
+
+        // GLB header
+        const GLTF_VERSION: u32 = 2;
+        file.write_all(b"glTF").expect("Could not write magic");
+        file.write_all(&GLTF_VERSION.to_le_bytes())
+            .expect("could not write version");
+        file.write_all(&total_length.to_le_bytes())
+            .expect("Could not write glTF length");
+        
+        // JSON chunk
+        file.write_all(&json_chunk_length.to_le_bytes())
+            .expect("Could not write JSON chunk length");
+        file.write_all(b"JSON").expect("Could not write JSON chunk magic");
+        file.write_all(&json_bytes).expect("Could not write JSON data");
+        file.write_all(&json_padding).expect("Could not write JSON padding");
+
+        // Binary chunk
+        file.write_all(&binary_chunk_length.to_le_bytes())
+            .expect("Could not write BIN chunk length");
+        file.write_all(b"BIN\0").expect("Could not write BIN chunk magic");
+        file.write_all(&self.buffer_data).expect("Could not write binary buffer");
+
+        // All of the buffer data is a multiple of 4 so no padding should
+        // be needed
+        assert!(self.buffer_data.len() % 4 == 0, "Padding needed!");
+    }
+
+    fn get_padding_length(length: u32) -> u32 {
+        const GLB_ALIGNMENT: u32 = 4;
+        // modulo but go from [1, GLB_ALIGNMENT] instead of 
+        // [0, GLB_ALIGNMENT - 1]
+        let leftover = (length - 1) % GLB_ALIGNMENT + 1;
+        GLB_ALIGNMENT - leftover
+    }
+
+    fn make_padding(length: u32, padding_char: u8) -> Vec<u8> {
+        (0..length).map(|_| padding_char).collect()
     }
 
     pub fn to_json(&self) -> serde_json::Value {
@@ -306,10 +372,13 @@ impl Gltf {
 
         json!({
             "asset": {
-                "version": 2.0,
+                "version": "2.0",
                 "copyright": copyright,
                 "generator": "Tower tiling generator from https://github.com/ptrgags/tower-tilings"
             },
+            "extensionsUsed": [
+                "EXT_mesh_gpu_instancing"
+            ],
             "scene": 0,
             "scenes": [
                 {
