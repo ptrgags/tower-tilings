@@ -193,9 +193,12 @@ impl Gltf {
         let mut result = Vec::new();
         
         for (x, y, z) in vectors {
-            result.extend_from_slice(&x.to_le_bytes());
-            result.extend_from_slice(&y.to_le_bytes());
-            result.extend_from_slice(&z.to_le_bytes());
+            let x_f32 = x as f32;
+            let y_f32 = y as f32;
+            let z_f32 = z as f32;
+            result.extend_from_slice(&x_f32.to_le_bytes());
+            result.extend_from_slice(&y_f32.to_le_bytes());
+            result.extend_from_slice(&z_f32.to_le_bytes());
         }
 
         result

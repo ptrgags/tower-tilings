@@ -12,8 +12,7 @@ use crate::tiling::IntegerTiling;
 use crate::tiling_mesh::TilingMesh;
 
 fn main() {
-
-    let file = File::open("input/test-tiling.json").unwrap();
+    let file = File::open("input/square-tiling.json").unwrap();
     let reader = BufReader::new(file);
     
     let tiling: IntegerTiling = serde_json::from_reader(reader).unwrap();

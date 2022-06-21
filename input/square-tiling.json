@@ -1,0 +1,41 @@
+{
+    "basis": "TwelfthRoot",
+    "materials": [
+        {
+            "base_color": [1, 0, 0],
+            "metallic": 0,
+            "roughness": 0.5
+        }
+    ],
+    "translations": [
+        [1, 0, 0, 0],
+        [0, 0, 0, 1]
+    ],
+    "profiles": [
+        {
+            "name": "E",
+            "offsets": [
+                [5, 0],
+                [0, 3],
+                [-3, 0],
+                [0, 1],
+                [3, 0],
+                [0, 3],
+                [-5, 0],
+                [2, 0]
+            ]
+        }
+    ],
+    "seeds": [
+        {
+            "position": [0, 0, 0, 0],
+            "faces": [
+                {
+                    "sides": 4,
+                    "profile": 0,
+                    "material": 0
+                }
+            ]
+        }
+    ]
+}
