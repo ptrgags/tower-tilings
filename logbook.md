@@ -76,3 +76,10 @@ Today I continued to work on the GLB output. I have it producing a GLB
 file, though there's still some debugging. The glTF validator says there
 are normals that are not unit length or have NaNs. I have some debugging to
 do this weekend then.
+
+## 2022-06-10 Fix one bug, find another
+
+Today I figured out the NaN problem (I was packing vectors as f64 when it should
+be f32), but now the position min/max is off. Also, when I view the results in
+a glTF viewer, everything is squashed like a pancake instead of being a tower
+shape.
