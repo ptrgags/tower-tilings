@@ -196,6 +196,7 @@ impl TilingMesh {
     pub fn save_towers(&self, fname: &str, instancing_radius: isize) {
         let offsets = self.make_instance_offsets(instancing_radius);
         self.towers.save_glb(fname, &self.tiling, offsets);
+        self.towers.save_obj("output/debug");
     }
 
     fn make_instance_offsets(&self, radius: isize) -> Vec<Vec3> {

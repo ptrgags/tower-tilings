@@ -241,7 +241,8 @@ impl Gltf {
         let count = indices.len();
         let mut buffer_view_data: Vec<u8> = Vec::new();
         for index in indices {
-            buffer_view_data.extend_from_slice(&index.to_le_bytes())
+            let index_u32 = index as u32;
+            buffer_view_data.extend_from_slice(&index_u32.to_le_bytes())
         }
         let buffer_view = self.add_buffer_view("Indices", buffer_view_data, true);
 

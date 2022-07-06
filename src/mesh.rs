@@ -182,8 +182,6 @@ impl Mesh {
         let face = &mut self.faces[face_index];
         let (nx, ny, nz) = face.normal.unwrap();
 
-        // TODO: remove the old face
-
         let old_vertices: Vec<usize> = self.face_edge_iter(face_index)
             .map(|i| self.half_edges[i].from_vertex)
             .collect();
@@ -308,31 +306,40 @@ impl Mesh {
         let mut normals = Vec::new();
         let mut indices = Vec::new();
 
+        let mut vertex_count: usize = 0;
         for (i, face) in self.faces.iter().enumerate() {
             let normal = face.normal.unwrap();
 
-            let ngon_indices: Vec<usize> = self.face_edge_iter(i)
-                .map(|i| self.half_edges[i].from_vertex)
+            let ngon_positions: Vec<Vec3> = self.face_edge_iter(i)
+                .map(|e| self.half_edges[e].from_vertex)
+                .map(|v| self.vertices[v].position)
                 .collect();
 
-            for index in Self::triangulate_ngon(ngon_indices) {
-                indices.push(index as u32);
-                positions.push(self.vertices[index].position);
+            let n: usize = ngon_positions.len();
+
+            for j in 0..n {
+                // Since the normals differ, we have to duplicate the positions
+                // here
+                positions.push(ngon_positions[j]);
                 normals.push(normal);
             }
+
+            for offset in Self::triangulate_ngon(n) {
+                indices.push((vertex_count + offset) as u32);
+            }
+            vertex_count += n;
         }
 
         (positions, normals, indices)
     }
 
-    pub fn triangulate_ngon(indices: Vec<usize>) -> Vec<usize> {
+    pub fn triangulate_ngon(n: usize) -> Vec<usize> {
         let mut result = Vec::new();
 
-        let first = indices[0];
-        let n = indices.len();
+        let first = 0;
         for i in 0..(n - 2) {
-            let second = indices[i + 1];
-            let third = indices[i + 2];
+            let second = i + 1;
+            let third = i + 2;
             result.push(first);
             result.push(second);
             result.push(third);
