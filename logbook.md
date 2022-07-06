@@ -83,3 +83,18 @@ Today I figured out the NaN problem (I was packing vectors as f64 when it should
 be f32), but now the position min/max is off. Also, when I view the results in
 a glTF viewer, everything is squashed like a pancake instead of being a tower
 shape.
+
+## 2022-07-04 It's working!
+
+Today I fixed the bugs. Turns out my triangulation wasn't correctly computing
+indices, but I fixed it.
+
+I'm not sure which glTF viewers out there support `EXT_mesh_gpu_instancing`
+so for starters I tried rendering it in CesiumJS with 
+
+[this sandcastle](https://sandcastle.cesium.com/#c=tVZtc+I2EP4rGj5BB2QbCBDKZcqRXHqdyzQT6LVzdaej2AJrIkseSSaknfz3riXbOIHrtcmED0byvj27+3ilSApt0JbRe6rQOyToPVpQzfIUf7bv2mErsvuFFIYwQVXY6qK/Q4GQTmTO47lgKTF0iozKaTcUj53vQxEK5xFHXEZ3OMqVosKsWEohRun/p5wzIs7BFq+VTD9qORn5QbvwHLb6fj/oBUHPP131/Wl/PB2MsR+M/NFwOD4ZDCejyfB0MP4StkLh4nkeupIx5ToUkU0ptTsI93vh0QJGyNCdmYJ7BwG9J5xLKSAjJwZDymkEKutcRIZJgdqdyhYStkIbpl29K8AmxmRTz4NUCU+kNtOJP/E9Q7XpGQlV0HjDb+sgxS84qdYF+uL/0Urd8xnY5R0TgsZokRBFImM78Cq8GHtLkmacQvGJ5wrluZJcEVGu/oTlAW7/f8A+B7ASLWSaKao14LdA3gS7DbWPVOXC+N1K5cC/DTfrF+fxi+DMoPdy9yLoxwGDN+u2XlQQkf+fKisFfUMSWP/N9ev4e6lkLmL0mSYs4m+D24UoIzzdvYrDH2GSEBEBeV/a/28hB791kCebQ9L+W9H/sEPQTb4kezbJf6QkZmJzzUyU3EjuUJWyK2ISbOQNaBCh28HE71invnu68er8rtmOxh8USelKge5aqnQ/zetXGts56PTkh9rmksLZQYxU5YQXUpmkzC9s3cOw3A/zuqzNUuaKd1FC2SYxZbEdrExqZpVrLAuiYPhCPgN7spzTjaJUl73oBf0B9sfD4Sg4LYs7HGL/xB+M/VH5wkUp1g4PKg9IrCPIAmeKpRBySzVWNJVbOoeaup40zh7A8zUrEsclmqoLhcHFLqOgAwcl4Rb4JTCgXdMK8p8Wj5oRNgr0T7Hd9EgbkmddbzajwcuqfA2iAYEau9LzBecs05LF+NfL5WTYUDjCi5qotVqezXdM1ziLDf5SS8Hmnqj4UOW3fbYMLhp5eg3B+JL9BReOoD/ZS8mukC6BeSDp+/ArZY+dZh9tzaBrJH64hgozTbFJqGjvP2SrUX/N1TUGklMEmC3v5qYu3kHpvvbNEbFplvz4pzc86XS/pdMLnii5bG6LaQexlllCFcUKdHONvkP7ceEWVQ0qO7hLABvd/Q2ysLQsmFwzDtLNpk8oWit/AhG+ubi+mK/qOtsPwP49FoGWRMQR0QZGMDheSclvibqiIncl1g5Oq9uaafPA6VkV9QeWZjAbCqq3YWQaCiMTLonau4WjnBocaV3Nv5nXNJ3FbItY/O7IjRVFnGgNknXOLXvC1tnMA/0DUy5t337eUsXJQ6GWBGef3EuM8cyD7XFL4zJ85vkf). Though I should see if Three.js
+or other libraries support it.
+
+The results look pretty cool!
+
+![Instanced tiling](figures/instanced-output.png)
